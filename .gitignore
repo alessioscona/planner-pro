@@ -65,7 +65,3 @@ Desktop.ini
 tmp/
 temp/
 
-# Lock files (optional — keep if using in CI/CD)
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
