@@ -1,0 +1,39 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: scheduler
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: scheduler
+    ports: ['5432:5432']
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:22.0.1
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_IMPORT: /opt/keycloak/data/import/scheduler-realm.json
+    ports: ['8080:8080']
+    volumes:
+      - ./scheduler-realm.json:/opt/keycloak/data/import/scheduler-realm.json
+
+  backend:
+    build: ../backend
+    depends_on: [postgres, keycloak]
+    environment:
+      DATABASE_URL: postgres://scheduler:secret@postgres:5432/scheduler
+      OIDC_ISSUER: http://keycloak:8080/realms/scheduler
+      OIDC_AUD: scheduler
+      OIDC_SKIP_VERIFY: '1'
+      APP_ENV: development
+    ports: ['8000:8000']
+
+  frontend:
+    build: ../frontend
+    ports: ['3000:80']
+volumes:
+  pgdata:
